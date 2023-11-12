@@ -36,72 +36,86 @@ async def root():
 
 @app.post("/analyze/text/")
 async def predict_smth(text: Article):
-    #store predictions
-    detect = []
+    try:
+        #store predictions
+        detect = []
 
-    #split into processable chunks
-    info = text.text.split("\n")
+        #split into processable chunks
+        info = text.text.split("\n")
 
-    #removes blanks
-    while("" in info):
-        info.remove("")
+        #removes blanks
+        while("" in info):
+            info.remove("")
 
-    #for debuging extract
-    #print(info)
+        #for debuging extract
+        #print(info)
 
-    #run model over each chunk
-    for part in info:
-        detect.append(classifier(part))
+        #run model over each chunk
+        for part in info:
+            detect.append(classifier(part))
 
-        print(f"{part}|{detect}")
-
-
-    #generates final score
-    final_score = process(detect)
+            print(f"{part}|{detect}")
 
 
-    #returns final score + list for highlights
-    return [
-        final_score, info, detect, "Custom Input"
-    ]
+        #generates final score
+        final_score = process(detect)
+
+
+        #returns final score + list for highlights
+        return [
+            final_score, info, detect, "Custom Input"
+        ]
+    except:
+        return [
+                0, [], [], "Error: Server error, try again"
+            ]
 
 #prediction root
 @app.post("/analyze/url/")
 async def predict_smth(url: URL):
-
-    #store predictions
-    detect = []
-
-    #extract article from url
     try:
-        article = extract(url.url)
+        #store predictions
+        detect = []
+    
+        #extract article from url
+        try:
+            article = extract(url.url)
+        except:
+            return [
+                0, [], [], "Error: Invalid URL"
+            ]
+
+        #split into processable chunks
+        info = article.text.split("\n")
+
+        #removes blanks
+        while("" in info):
+            info.remove("")
+
+        if len(info) == 0:
+                return [
+                0, [], [], "Error: No article found for the URL"
+            ]
+
+        #for debuging extract
+        #print(info)
+
+        #run model over each chunk
+        for part in info:
+            detect.append(classifier(part))
+
+            print(f"{part}|{detect}")
+
+
+        #generates final score
+        final_score = process(detect)
+
+    
+        #returns final score + list for highlights
+        return [
+            final_score, info, detect, article.title
+        ]
     except:
         return [
-            0, [], [], "Error: Invalid URL"
-        ]
-
-    #split into processable chunks
-    info = article.text.split("\n")
-
-    #removes blanks
-    while("" in info):
-        info.remove("")
-
-    #for debuging extract
-    #print(info)
-
-    #run model over each chunk
-    for part in info:
-        detect.append(classifier(part))
-
-        print(f"{part}|{detect}")
-
-
-    #generates final score
-    final_score = process(detect)
-
-
-    #returns final score + list for highlights
-    return [
-        final_score, info, detect, article.title
-    ]
+                    0, [], [], "Error: Server error, try again"
+                ]
