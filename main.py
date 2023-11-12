@@ -36,18 +36,33 @@ async def root():
 
 @app.post("/analyze/text/")
 async def predict_smth(text: Article):
-    score = classifier(text.text)
+    #store predictions
+    detect = []
 
-    print(score)
+    #split into processable chunks
+    info = text.text.split("\n")
 
-    if score[0]["label"] == "Biased":
-        score = -score[0]["score"]
-    else:
-        score = score[0]["score"]
+    #removes blanks
+    while("" in info):
+        info.remove("")
+
+    #for debuging extract
+    #print(info)
+
+    #run model over each chunk
+    for part in info:
+        detect.append(classifier(part))
+
+        print(f"{part}|{detect}")
+
+
+    #generates final score
+    final_score = process(detect)
+
 
     #returns final score + list for highlights
     return [
-        score, text
+        final_score, info, detect, "Custom Input"
     ]
 
 #prediction root
@@ -62,7 +77,7 @@ async def predict_smth(url: URL):
         article = extract(url.url)
     except:
         return [
-            0, [], [], "Error Invalid URL"
+            0, [], [], "Error: Invalid URL"
         ]
 
     #split into processable chunks
