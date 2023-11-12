@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 # Python imports
 from python_util.extract_article import extract
-from python_util.model import get_classifier,get_tone_analysis,get_tone_screen
+from python_util.model import get_classifier,get_tone_analysis
 import numpy as np
 
 # Set input classes
@@ -17,8 +17,6 @@ class Article(BaseModel):
 classifier = get_classifier()
 
 tone_analyzer =  get_tone_analysis()
-
-tone_screener =  get_tone_screen()
 
 #Finds mean score based on model predictions
 def process_bias(data):
@@ -55,7 +53,6 @@ async def predict_smth(text: Article):
         #store predictions
         detect_bias = []
         detect_tone = []
-        detect_screen = []
 
         #split into processable chunks
         info = text.text.split("\n")
@@ -96,7 +93,6 @@ async def predict_smth(url: URL):
         #store predictions
         detect_bias = []
         detect_tone = []
-        detect_screen = []
 
         #extract article from url
         try:
