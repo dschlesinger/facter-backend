@@ -34,7 +34,7 @@ app = FastAPI()
 async def root():
     return {"message": "Hello World"}
 
-@app.post("/predict/text/")
+@app.post("/analyze/text/")
 async def predict_smth(text: Article):
     score = classifier(text.text)
 
@@ -51,7 +51,7 @@ async def predict_smth(text: Article):
     ]
 
 #prediction root
-@app.post("/predict/url/")
+@app.post("/analyze/url/")
 async def predict_smth(url: URL):
 
     #store predictions
