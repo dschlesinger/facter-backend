@@ -9,6 +9,9 @@ from python_util.model import get_classifier
 class URL(BaseModel):
     url: str
 
+class Article(BaseModel):
+    text: str
+
 # Creates classifier object
 classifier = get_classifier()
 
@@ -30,6 +33,22 @@ app = FastAPI()
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@app.post("/predict/text/")
+async def predict_smth(text: Article):
+    score = classifier(text.text)
+
+    print(score)
+
+    if score[0]["label"] == "Biased":
+        score = -score[0]["score"]
+    else:
+        score = score[0]["score"]
+
+    #returns final score + list for highlights
+    return [
+        score, text
+    ]
 
 #prediction root
 @app.post("/predict/url/")
