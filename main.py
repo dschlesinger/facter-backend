@@ -1,30 +1,13 @@
+# Imports
 from fastapi import FastAPI
+# Python imports
+from python_util.extract_article import extract
+from python_util.model import get_classifier
 
-from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
-from transformers import pipeline
+# Creates classifier object
+classifier = get_classifier()
 
-tokenizer = AutoTokenizer.from_pretrained("mediabiasgroup/roberta_mtl_media_bias")
-model = TFAutoModelForSequenceClassification.from_pretrained("mediabiasgroup/roberta_mtl_media_bias")
-
-classifier = pipeline('text-classification', model=model, tokenizer=tokenizer) # cuda = 0,1 based on gpu availability
-
-from newspaper import Article
-import nltk
-nltk.download('punkt')
-
-
-def extract(url):
-
-    # Creates article object
-    article = Article(url)
-
-    # Downloads and parses article
-    article.download()
-    article.parse()
-
-    # Returns
-    return article
-
+#Finds mean score based on model predictions
 def process(data):
     total_score = 0
 
@@ -33,35 +16,48 @@ def process(data):
             total_score -= i[0]["score"]
         else:
             total_score += i[0]["score"]
-    return total_score
+    return total_score/len(data)
 
+#Init fast api
 app = FastAPI()
 
+#Root directory
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
+#prediction root
 @app.post("/predict/")
 async def predict_smth(url:str):
 
+    #store predictions
     detect = []
 
+    #extract article from url
     article = extract(url)
 
+    #split into processable chunks
     info = article.text.split("\n")
 
+    #removes blanks
     while("" in info):
         info.remove("")
 
-    print(info)
+    #for debuging extract
+    #print(info)
 
+    #run model over each chunk
     for part in info:
         detect.append(classifier(part))
 
         print(f"{part}|{detect}")
 
+
+    #generates final score
     final_score = process(detect)
 
+
+    #returns final score + list for highlights
     return [
         final_score, info
     ]
