@@ -83,5 +83,5 @@ async def predict_smth(url: URL):
 
     #returns final score + list for highlights
     return [
-        final_score, detect
+        final_score, detect, info
     ]
