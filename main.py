@@ -62,7 +62,7 @@ async def predict_smth(url: URL):
         article = extract(url.url)
     except:
         return [
-            "Error: Invalid URL"
+            0, [], [], "Error Invalid URL"
         ]
 
     #split into processable chunks
