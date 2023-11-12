@@ -58,7 +58,12 @@ async def predict_smth(url: URL):
     detect = []
 
     #extract article from url
-    article = extract(url.url)
+    try:
+        article = extract(url.url)
+    except:
+        return [
+            "Error: Invalid URL"
+        ]
 
     #split into processable chunks
     info = article.text.split("\n")
@@ -83,5 +88,5 @@ async def predict_smth(url: URL):
 
     #returns final score + list for highlights
     return [
-        final_score, detect, info, article.title
+        final_score, info, detect, article.title
     ]
