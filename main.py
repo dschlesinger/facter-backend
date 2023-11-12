@@ -1,8 +1,13 @@
 # Imports
 from fastapi import FastAPI
+from pydantic import BaseModel
 # Python imports
 from python_util.extract_article import extract
 from python_util.model import get_classifier
+
+# Set input classes
+class URL(BaseModel):
+    url: str
 
 # Creates classifier object
 classifier = get_classifier()
@@ -27,14 +32,14 @@ async def root():
     return {"message": "Hello World"}
 
 #prediction root
-@app.post("/predict/")
-async def predict_smth(url:str):
+@app.post("/predict/url/")
+async def predict_smth(url: URL):
 
     #store predictions
     detect = []
 
     #extract article from url
-    article = extract(url)
+    article = extract(url.url)
 
     #split into processable chunks
     info = article.text.split("\n")
