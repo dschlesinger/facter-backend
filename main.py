@@ -92,52 +92,52 @@ async def predict_smth(text: Article):
 #prediction root
 @app.post("/analyze/url/")
 async def predict_smth(url: URL):
-    #try:
-    #store predictions
-    detect_bias = []
-    detect_tone = []
-    detect_screen = []
-
-    #extract article from url
     try:
-        article = extract(url.url)
+        #store predictions
+        detect_bias = []
+        detect_tone = []
+        detect_screen = []
+
+        #extract article from url
+        try:
+            article = extract(url.url)
+        except:
+            return [
+            0, [], [], "Error: Invalid URL"
+            ]
+
+        #split into processable chunks
+        info = article.text.split("\n")
+
+        #removes blanks
+        while("" in info):
+            info.remove("")
+
+        if len(info) == 0:
+                return [
+                0, [], [], "Error: No article found for the URL"
+            ]
+
+        #for debuging extract
+        #print(info)
+
+        #run model over each chunk
+        for part in info:
+            detect_bias.append(classifier(part))
+            detect_tone.append(tone_analyzer(part))
+
+            print(f"{part}|{tone_analyzer(part)}")
+
+        #generates final score
+        final_score = process_bias(detect_bias)
+
+        final_tone_score = process_tone(detect_tone)
+
+        #returns final score + list for highlights
+        return [
+            final_score, info, detect_bias, detect_tone, final_tone_score, article.title
+        ]
     except:
         return [
-           0, [], [], "Error: Invalid URL"
-        ]
-
-    #split into processable chunks
-    info = article.text.split("\n")
-
-    #removes blanks
-    while("" in info):
-        info.remove("")
-
-    if len(info) == 0:
-            return [
-            0, [], [], "Error: No article found for the URL"
-        ]
-
-    #for debuging extract
-    #print(info)
-
-    #run model over each chunk
-    for part in info:
-        detect_bias.append(classifier(part))
-        detect_tone.append(tone_analyzer(part))
-
-        print(f"{part}|{tone_analyzer(part)}")
-
-    #generates final score
-    final_score = process_bias(detect_bias)
-
-    final_tone_score = process_tone(detect_tone)
-
-    #returns final score + list for highlights
-    return [
-        final_score, info, detect_bias, detect_tone, final_tone_score, article.title
-    ]
-    # except:
-    #     return [
-    #                 0, [], [], "Error: Server error, try again"
-    #             ]
+                    0, [], [], "Error: Server error, try again"
+             ]
