@@ -5,3 +5,5 @@ bs4
 tensorflow
 newspaper3k
 nltk
+spacy
+scipy

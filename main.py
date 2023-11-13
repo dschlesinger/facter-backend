@@ -3,8 +3,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 # Python imports
 from python_util.extract_article import extract
-from python_util.model import get_classifier,get_tone_analysis
+from python_util.model import get_bias,get_tone
 import numpy as np
+from analyze_article import analyze_article
 
 # Set input classes
 class URL(BaseModel):
@@ -12,32 +13,6 @@ class URL(BaseModel):
 
 class Article(BaseModel):
     text: str
-
-# Creates classifier object
-classifier = get_classifier()
-
-tone_analyzer =  get_tone_analysis()
-
-#Finds mean score based on model predictions
-def process_bias(data):
-    total_score = 0
-
-    for i in data:
-        if i[0]["label"] == "Biased":
-            total_score -= i[0]["score"]
-        else:
-            total_score += i[0]["score"]
-    return total_score/len(data)
-
-def process_tone(data):
-    total_score = 0
-
-    for i in data:
-        if i[0]["label"] == "NEGATIVE":
-            total_score -= i[0]["score"]
-        else:
-            total_score += i[0]["score"]
-    return total_score/len(data)
 
 #Init fast api
 app = FastAPI()
@@ -66,20 +41,18 @@ async def predict_smth(text: Article):
 
         #run model over each chunk
         for part in info:
-            detect_bias.append(classifier(part))
-            detect_tone.append(tone_analyzer(part))
+            detect_bias.append(get_bias(part))
+            detect_tone.append(get_tone(part))
 
             print(f"{part}|{detect_bias}")
 
 
-        #generates final score
-        final_score = process_bias(detect_bias)
-
-        final_tone_score = process_tone(detect_tone)
+        final_bias = np.array(detect_bias).mean()
+        final_tone_score = np.array(detect_tone).mean()
 
         #returns final score + list for highlights
         return [
-            final_score, info, detect_bias, detect_tone, final_tone_score, "Custom Input"
+            final_bias, info, detect_bias, detect_tone, final_tone_score, "Custom Input"
         ]
     except:
         return [
@@ -89,51 +62,43 @@ async def predict_smth(text: Article):
 #prediction root
 @app.post("/analyze/url/")
 async def predict_smth(url: URL):
-    try:
-        #store predictions
-        detect_bias = []
-        detect_tone = []
+    #try:
+    #extract article from url
+    #try:
+    article = analyze_article(url.url)
+    # except:
+    #     return [
+    #     0, [], [], "Error: Invalid URL"
+    #     ]
 
-        #extract article from url
-        try:
-            article = extract(url.url)
-        except:
+    # Checks if it can find an article
+    if len(article.paragraphs) == 0:
             return [
-            0, [], [], "Error: Invalid URL"
-            ]
-
-        #split into processable chunks
-        info = article.text.split("\n")
-
-        #removes blanks
-        while("" in info):
-            info.remove("")
-
-        if len(info) == 0:
-                return [
-                0, [], [], "Error: No article found for the URL"
-            ]
-
-        #for debuging extract
-        #print(info)
-
-        #run model over each chunk
-        for part in info:
-            detect_bias.append(classifier(part))
-            detect_tone.append(tone_analyzer(part))
-
-            print(f"{part}|{tone_analyzer(part)}")
-
-        #generates final score
-        final_score = process_bias(detect_bias)
-
-        final_tone_score = process_tone(detect_tone)
-
-        #returns final score + list for highlights
-        return [
-            final_score, info, detect_bias, detect_tone, final_tone_score, article.title
+            0, [], [], "Error: No article found for the URL"
         ]
-    except:
-        return [
-                    0, [], [], "Error: Server error, try again"
-             ]
+
+    #returns final score + list for highlights
+    return [
+        # Bias and tone info (as well as paragraphs)
+        article.final_bias_score, 
+        [p.text for p in article.paragraphs], 
+        [p.bias for p in article.paragraphs], 
+        [p.tone for p in article.paragraphs], 
+        article.final_tone_score, 
+
+        # Article info
+        article.article.title,
+
+        # Info on similar articles
+        [p.similar_paragraphs[0]["p"].text for p in article.paragraphs if len(p.similar_paragraphs) > 0], # Most similar paragraph for each paragraph 
+        [[a["p"].domain_name for a in p.similar_paragraphs] for p in article.paragraphs if len(p.similar_paragraphs) > 0], # All domain names for each paragraph
+        [[a["p"].url for a in p.similar_paragraphs] for p in article.paragraphs if len(p.similar_paragraphs) > 0], # All urls for each paragraph
+
+
+
+
+    ]
+    # except:
+    #     return [
+    #                 0, [], [], "Error: Server error, try again"
+    #          ]
