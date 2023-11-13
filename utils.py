@@ -42,7 +42,7 @@ def search(query):
     
     # Gets soup for google search
     page = requests.get(f"https://www.google.com/search?q={query}")
-    soup = BeautifulSoup(page.content)
+    soup = BeautifulSoup(page.content, features="lxml")
 
     # Gets main div with all search results
     main = soup.find("div", id="main")

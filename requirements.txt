@@ -1,9 +1,0 @@
-#type everything u install here
-fastapi
-uvicorn[standard]
-bs4
-tensorflow
-newspaper3k
-nltk
-spacy
-scipy
