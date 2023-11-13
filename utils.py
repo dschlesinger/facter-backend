@@ -48,14 +48,17 @@ def search(query):
     main = soup.find("div", id="main")
 
     link_list = []
-    for link in main.find_all("a",href=re.compile("(?<=/url\?q=)(htt.*://.*)")):
-        # Cleans links
-        clean_link = link['href'].split("&sa=")[0].replace("/url?q=", "")
-        # Adds to main list
-        link_list.append(clean_link)
+    try:
+        for link in main.find_all("a",href=re.compile("(?<=/url\?q=)(htt.*://.*)")):
+            # Cleans links
+            clean_link = link['href'].split("&sa=")[0].replace("/url?q=", "")
+            # Adds to main list
+            link_list.append(clean_link)
 
-    # Removes "support.google.com" and "accounts.google.com" from link list
-    link_list = [link for link in link_list if not ("support.google.com" in link or "accounts.google.com" in link)][:5]
+        # Removes "support.google.com" and "accounts.google.com" from link list
+        link_list = [link for link in link_list if not ("support.google.com" in link or "accounts.google.com" in link)][:5]
+    except:
+        link_list = []
 
     # Returns
     print(len(link_list))
