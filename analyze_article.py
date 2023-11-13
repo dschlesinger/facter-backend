@@ -35,7 +35,7 @@ def analyze_article(url):
     # Finds similar paragraphs for each paragraph
     SIMILARITIY_THRESHOLD = 0.8
     # Finds similar paragraphs
-    for original_article_paragraph in original_article.paragraphs:
+    for original_article_paragraph in [original_article.paragraphs[i] for i in range(len(original_article.paragraphs)) if original_article.paragraphs[i].bias < 0]:
         for p in paragraphs:
             sim = get_text_distance(original_article_paragraph.text, p.text)
             if sim > SIMILARITIY_THRESHOLD:
