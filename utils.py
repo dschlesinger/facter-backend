@@ -55,9 +55,10 @@ def search(query):
         link_list.append(clean_link)
 
     # Removes "support.google.com" and "accounts.google.com" from link list
-    link_list = [link for link in link_list if not ("support.google.com" in link or "accounts.google.com" in link)]
+    link_list = [link for link in link_list if not ("support.google.com" in link or "accounts.google.com" in link)][:5]
 
     # Returns
+    print(len(link_list))
     return link_list
 
 
